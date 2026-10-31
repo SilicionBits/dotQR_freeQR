@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DotQR</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-card: #1c1d1f;
+      --bg-field: #2a2b2e;
+      --border: #36383c;
+      --text: #f4f4f5;
+      --muted: #9a9ca3;
+      --accent: #4a83bb;
+      --accent-strong: #3b6e9f;
+      --accent-soft: #8db4dc;
+      --danger: #ff8a80;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Inter", Arial, sans-serif;
+      color: var(--text);
+      background: linear-gradient(120deg, #d6e4f2 0%, #e9eff7 50%, #cfdcec 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 1080px;
+      background: var(--bg-card);
+      border-radius: 24px;
+      padding: 40px 48px;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      column-gap: 48px;
+      row-gap: 0;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
+    }
+
+    /* ---------- Left: form ---------- */
+    .brand {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+    .brand img { height: 52px; width: auto; border-radius: 8px; }
+    .brand span {
+      font-size: 0.8rem;
+      color: var(--muted);
+      border-left: 1px solid var(--border);
+      padding-left: 12px;
+    }
+
+    h1 {
+      font-size: 1.7rem;
+      font-weight: 700;
+      margin: 0 0 6px;
+    }
+    .subtitle {
+      color: var(--muted);
+      margin: 0 0 28px;
+      font-size: 0.95rem;
+    }
+
+    .field { margin-bottom: 16px; }
+    .field label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--accent-soft);
+      margin-bottom: 6px;
+      letter-spacing: 0.02em;
+    }
+    .field label .req { color: var(--danger); margin-left: 2px; }
+
+    input, select {
+      width: 100%;
+      font: inherit;
+      font-size: 0.95rem;
+      color: var(--text);
+      background: var(--bg-field);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    input::placeholder { color: #6f7178; }
+    input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(74, 131, 187, 0.3);
+    }
+    input.invalid { border-color: var(--danger); }
+
+    /* main URL/text input: pill style like the reference */
+    .main-input {
+      background: #fff;
+      color: #1c1d1f;
+      border-radius: 999px;
+      padding: 15px 22px;
+      font-size: 1rem;
+      border-color: #fff;
+    }
+    .main-input::placeholder { color: #8a8a8a; }
+    .hint { color: var(--muted); font-size: 0.82rem; margin-top: 8px; }
+
+    .product-box {
+      margin-top: 24px;
+      padding: 20px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+    .product-box h3 {
+      margin: 0 0 14px;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .row .field { margin-bottom: 0; }
+
+    .error-msg {
+      color: var(--danger);
+      font-size: 0.85rem;
+      margin-top: 14px;
+    }
+    .error-msg:empty { display: none; }
+
+    /* ---------- Right: preview ---------- */
+    .preview {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      align-self: end; /* bottom of buttons lines up with bottom of Product details */
+    }
+    .preview-label {
+      text-align: center;
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+    .qr-box {
+      background: #fff;
+      border-radius: 18px;
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      overflow: hidden;
+    }
+    .qr-box canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .placeholder {
+      text-align: center;
+      color: #b4b4b4;
+      font-size: 0.85rem;
+    }
+    .placeholder svg { width: 72px; height: 72px; margin-bottom: 8px; opacity: 0.5; }
+
+    .filename {
+      margin-top: 12px;
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--muted);
+      word-break: break-all;
+      min-height: 1.2em;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 56px;
+      gap: 10px;
+      margin-top: 18px;
+    }
+    button {
+      font: inherit;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.05s, opacity 0.15s;
+    }
+    button:active:not(:disabled) { transform: translateY(1px); }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-generate {
+      background: var(--accent);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 15px;
+    }
+    .btn-generate:hover { background: var(--accent-strong); }
+
+    .btn-download {
+      background: #d4d4d6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-download:hover:not(:disabled) { background: #fff; }
+    .btn-download svg { width: 24px; height: 24px; }
+
+    @media (max-width: 860px) {
+      .card { grid-template-columns: 1fr; padding: 28px 22px; row-gap: 32px; }
+      .brand { margin-bottom: 0; }
+      .preview { max-width: 360px; width: 100%; margin: 0 auto; }
+    }
+    @media (max-width: 480px) {
+      .row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <div class="brand">
+      <img src="company-logo.png" alt="DotQR">
+    </div>
+
+    <!-- Left: inputs -->
+    <section>
+
+      <h1>Create a QR code for your product</h1>
+      <p class="subtitle">Enter a link or text, add product details, then download.</p>
+
+      <div class="field">
+        <input type="text" id="text" class="main-input" placeholder="Enter URL or text" autocomplete="off" />
+        <div class="hint">Try something like https://example.com/</div>
+      </div>
+
+      <div class="field" style="margin-top: 20px;">
+        <label for="errorCorrectionLevel">Error correction</label>
+        <select id="errorCorrectionLevel">
+          <option value="L">Low (L) – up to 7% damage</option>
+          <option value="M" selected>Medium (M) – up to 15% damage</option>
+          <option value="Q">Quartile (Q) – up to 25% damage</option>
+          <option value="H">High (H) – up to 30% damage</option>
+        </select>
+      </div>
+
+      <div class="product-box">
+        <h3>Product details</h3>
+        <div class="field">
+          <label for="productName">Product Name<span class="req">*</span></label>
+          <input type="text" id="productName" placeholder="e.g. Paracetamol 500mg" autocomplete="off" />
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="batch">Batch<span class="req">*</span></label>
+            <input type="text" id="batch" placeholder="e.g. B2026-104" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="packSize">Pack Size<span class="req">*</span></label>
+            <input type="text" id="packSize" placeholder="e.g. 10x10" autocomplete="off" />
+          </div>
+        </div>
+      </div>
+
+      <div class="error-msg" id="errorMsg"></div>
+    </section>
+
+    <!-- Right: preview -->
+    <aside class="preview">
+      <div class="preview-label">Preview</div>
+      <div class="qr-box" id="qrcode">
+        <div class="placeholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM17 17h4v4h-4zM14 20h2"/>
+          </svg>
+          <div>Your QR code will appear here</div>
+        </div>
+      </div>
+      <div class="filename" id="fileName"></div>
+
+      <div class="actions">
+        <button class="btn-generate" id="generateBtn" onclick="generateQRCode()">Generate</button>
+        <button class="btn-download" id="downloadBtn" onclick="downloadQRCode()" title="Download PNG" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="#1c1d1f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3v12M7 10l5 5 5-5M4 20h16"/>
+          </svg>
+        </button>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Local copy first; CDN as fallback -->
+  <script src="qrcode.min.js"></script>
+  <script>window.QRCode || document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>');</script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let currentCanvas = null;   // last generated QR
+    let generatedFor = "";      // snapshot of inputs used for it
+
+    function getInputs() {
+      return {
+        text: $("text").value.trim(),
+        level: $("errorCorrectionLevel").value,
+        product: $("productName").value.trim(),
+        batch: $("batch").value.trim(),
+        pack: $("packSize").value.trim()
+      };
+    }
+
+    function showError(msg) { $("errorMsg").textContent = msg || ""; }
+
+    function validate(v) {
+      const required = [["text", v.text], ["productName", v.product], ["batch", v.batch], ["packSize", v.pack]];
+      let ok = true;
+      required.forEach(([id, val]) => {
+        $(id).classList.toggle("invalid", !val);
+        if (!val) ok = false;
+      });
+      if (!ok) showError("Please fill in the text/URL, Product Name, Batch and Pack Size.");
+      return ok;
+    }
+
+    // Make a safe file name: ProductName_Batch_PackSize.png
+    function buildFileName(v) {
+      const clean = (s) => s.replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+      return `${clean(v.product)}_${clean(v.batch)}_${clean(v.pack)}.png`;
+    }
+
+    function generateQRCode() {
+      showError("");
+      const v = getInputs();
+      if (!validate(v)) return false;
+
+      if (typeof QRCode === "undefined") {
+        showError("QR library failed to load. Make sure qrcode.min.js is in the same folder.");
+        return false;
+      }
+
+      const tempDiv = document.createElement("div");
+      let qr;
+      try {
+        qr = new QRCode(tempDiv, {
+          text: v.text,
+          width: 1500,
+          height: 1500,
+          colorDark: "#000000",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel[v.level]
+        });
+      } catch (e) {
+        showError("Text is too long for a QR code at this error-correction level. Try shorter text or a lower level.");
+        return false;
+      }
+
+      const srcCanvas = tempDiv.querySelector("canvas");
+
+      // Add a white quiet-zone border (4 modules) so scanners read it reliably
+      const modules = qr._oQRCode ? qr._oQRCode.getModuleCount() : 25;
+      const margin = Math.round((srcCanvas.width / modules) * 4);
+      const out = document.createElement("canvas");
+      out.width = srcCanvas.width + margin * 2;
+      out.height = srcCanvas.height + margin * 2;
+      const ctx = out.getContext("2d");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, out.width, out.height);
+      ctx.drawImage(srcCanvas, margin, margin);
+
+      // Preview shows the QR without the extra border (the download keeps it)
+      const box = $("qrcode");
+      box.innerHTML = "";
+      const preview = document.createElement("canvas");
+      preview.width = srcCanvas.width;
+      preview.height = srcCanvas.height;
+      preview.getContext("2d").drawImage(srcCanvas, 0, 0);
+      box.appendChild(preview);
+
+      currentCanvas = out;
+      generatedFor = JSON.stringify(v);
+      $("downloadBtn").disabled = false;
+      $("fileName").textContent = buildFileName(v);
+      return true;
+    }
+
+    function downloadQRCode() {
+      const v = getInputs();
+      // Regenerate if anything changed since the last Generate
+      if (!currentCanvas || JSON.stringify(v) !== generatedFor) {
+        if (!generateQRCode()) return;
+      }
+      const name = buildFileName(v);
+      currentCanvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }, "image/png");
+    }
+
+    // Live file-name preview + clear red borders while typing
+    ["text", "productName", "batch", "packSize"].forEach((id) => {
+      $(id).addEventListener("input", () => {
+        $(id).classList.remove("invalid");
+        const v = getInputs();
+        if (currentCanvas && v.product && v.batch && v.pack) $("fileName").textContent = buildFileName(v);
+      });
+      $(id).addEventListener("keydown", (e) => { if (e.key === "Enter") generateQRCode(); });
+    });
+  </script>
+</body>
+</html>
